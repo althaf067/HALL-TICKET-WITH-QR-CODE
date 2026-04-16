@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hall Ticket Generation System</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0d0d14;
+    --paper: #f5f0e8;
+    --accent: #c0392b;
+    --gold: #b8860b;
+    --blue: #1a3a5c;
+    --line: #c8bfaa;
+    --white: #ffffff;
+    --green: #1a7c4f;
+    --purple: #6c3483;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(26,58,92,0.5) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(192,57,43,0.3) 0%, transparent 50%);
+  }
+  h1.site-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--paper);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    letter-spacing: 0.03em;
+    text-align: center;
+    margin-bottom: 6px;
+  }
+  .site-subtitle {
+    color: #8a8070;
+    font-size: 0.85rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+
+  /* TAB NAV */
+  .tab-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 32px;
+    background: rgba(255,255,255,0.06);
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .tab-btn {
+    padding: 10px 28px;
+    border: none;
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    background: transparent;
+    color: #8a8070;
+  }
+  .tab-btn.active {
+    background: var(--blue);
+    color: white;
+  }
+  .tab-btn:hover:not(.active) { color: var(--paper); }
+  .tab-btn .tab-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    padding: 1px 7px;
+    margin-left: 6px;
+    font-weight: 700;
+    vertical-align: middle;
+  }
+
+  /* FORM */
+  .form-panel {
+    background: var(--paper);
+    border-radius: 4px;
+    width: 100%;
+    max-width: 720px;
+    padding: 40px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+    position: relative;
+    overflow: hidden;
+  }
+  .form-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, var(--accent), var(--gold), var(--blue));
+  }
+  .form-panel h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--blue);
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .full { grid-column: 1 / -1; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #5a5040;
+  }
+  label .req-star { color: var(--accent); margin-left: 2px; }
+  input, select {
+    border: 1.5px solid var(--line);
+    background: var(--white);
+    border-radius: 3px;
+    padding: 10px 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus, select:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(26,58,92,0.12);
+  }
+  input:invalid:not(:placeholder-shown), input.touched:invalid {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(192,57,43,0.1);
+  }
+  .section-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 22px 0 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+  .subject-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 50px;
+    gap: 8px;
+    margin-bottom: 8px;
+    align-items: end;
+  }
+  .remove-btn {
+    background: #fee; border: 1.5px solid #f9c; color: var(--accent);
+    border-radius: 3px; padding: 10px 8px; cursor: pointer; font-size: 0.82rem;
+    transition: background 0.15s;
+  }
+  .remove-btn:hover { background: #fdd; }
+  .add-subject-btn {
+    background: none;
+    border: 1.5px dashed var(--line);
+    color: #7a7060;
+    border-radius: 3px;
+    padding: 9px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    width: 100%;
+    transition: border-color 0.2s, color 0.2s;
+    margin-top: 6px;
+  }
+  .add-subject-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .generate-btn {
+    width: 100%;
+    margin-top: 28px;
+    background: var(--blue);
+    color: var(--white);
+    border: none;
+    border-radius: 3px;
+    padding: 15px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .generate-btn:hover { background: #112840; }
+
+  /* PHOTO UPLOAD */
+  .photo-upload-area {
+    border: 2px dashed var(--line);
+    border-radius: 4px;
+    padding: 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--white);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .photo-upload-area:hover { border-color: var(--blue); background: #f0f4f8; }
+  .photo-upload-area.has-photo { border-style: solid; border-color: var(--blue); }
+  .photo-upload-area input[type="file"] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    border: none; padding: 0;
+  }
+  .photo-upload-area input[type="file"]:focus { box-shadow: none; }
+  .photo-preview-img {
+    width: 80px; height: 96px;
+    object-fit: cover;
+    border-radius: 2px;
+    border: 2px solid var(--blue);
+    display: none;
+  }
+  .photo-upload-icon { font-size: 2rem; color: #bbb; }
+  .photo-upload-text { font-size: 0.78rem; color: #7a7060; }
+  .photo-upload-hint { font-size: 0.65rem; color: #bbb; letter-spacing: 0.08em; }
+  .photo-remove-btn {
+    background: #fee; border: 1.5px solid #f9c; color: var(--accent);
+    border-radius: 3px; padding: 4px 12px; cursor: pointer; font-size: 0.72rem;
+    display: none; z-index: 2; position: relative;
+    transition: background 0.15s;
+  }
+  .photo-remove-btn:hover { background: #fdd; }
+
+  /* TICKET SECTION */
+  #ticket-section { width: 100%; max-width: 780px; margin-top: 40px; display: none; }
+  .ticket-actions {
+    display: flex; gap: 12px; justify-content: flex-end; margin-bottom: 14px;
+  }
+  .action-btn {
+    padding: 10px 22px;
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    letter-spacing: 0.04em;
+    transition: opacity 0.15s;
+  }
+  .action-btn:hover { opacity: 0.85; }
+  .btn-edit { background: var(--paper); color: var(--ink); }
+  .btn-print { background: var(--accent); color: white; font-size: 1rem; padding: 12px 28px; }
+
+  /* HALL TICKET CARD */
+  #hall-ticket {
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+  }
+  .ht-header {
+    background: var(--blue);
+    color: white;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .ht-logo {
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.7rem; flex-shrink: 0;
+  }
+  .ht-uni-info { flex: 1; }
+  .ht-uni-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .ht-exam-name {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+  .ht-badge {
+    background: var(--accent);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 2px;
+    font-size: 0.73rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    align-self: flex-start;
+  }
+  .ht-stripe {
+    height: 5px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 50%, var(--blue) 100%);
+  }
+  .ht-body { padding: 22px 28px; }
+  .ht-title {
+    text-align: center;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--blue);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border: 1.5px solid var(--blue);
+    padding: 7px 20px;
+    display: block;
+    margin-bottom: 18px;
+  }
+  .ht-main { display: flex; gap: 16px; align-items: flex-start; }
+  .ht-details { flex: 1; }
+  .ht-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid #ddd;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .ht-info-cell {
+    padding: 8px 12px;
+    border-bottom: 1px solid #eee;
+    border-right: 1px solid #eee;
+  }
+  .ht-info-cell:nth-child(even) { border-right: none; }
+  .ht-info-cell:nth-last-child(-n+2) { border-bottom: none; }
+  .ht-info-label {
+    font-size: 0.62rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; color: #999; margin-bottom: 2px;
+  }
+  .ht-info-value {
+    font-size: 0.86rem; font-weight: 600; color: var(--ink);
+    font-family: 'DM Mono', monospace;
+  }
+  .ht-right-col {
+    display: flex; flex-direction: column; align-items: center; gap: 12px; flex-shrink: 0;
+  }
+  .ht-photo {
+    width: 88px; height: 108px;
+    border: 2px solid var(--blue);
+    border-radius: 2px;
+    background: #f0eee8;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    color: #bbb; font-size: 2.2rem;
+    overflow: hidden;
+    position: relative;
+  }
+  .ht-photo img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .ht-photo-label {
+    font-size: 0.58rem; text-align: center; color: #999; margin-top: 4px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .ht-qr-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+  }
+  #qrcode-display {
+    width: 120px; height: 120px;
+    border: 2.5px solid var(--blue);
+    border-radius: 3px;
+    padding: 5px;
+    background: white;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #qrcode-display canvas { display: block; }
+  .ht-qr-label {
+    font-size: 0.58rem; letter-spacing: 0.1em;
+    text-transform: uppercase; color: #999; text-align: center;
+  }
+  .ht-qr-id {
+    font-size: 0.58rem; color: #bbb;
+    font-family: 'DM Mono', monospace; text-align: center;
+  }
+  .ht-subjects { margin-top: 16px; }
+  .ht-subjects-title {
+    font-size: 0.68rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--blue); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ht-subjects-title::after { content: ''; flex: 1; height: 1px; background: #ddd; }
+  .ht-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+  .ht-table thead tr { background: var(--blue); color: white; }
+  .ht-table th {
+    padding: 7px 10px; text-align: left;
+    font-size: 0.65rem; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .ht-table td {
+    padding: 7px 10px; border-bottom: 1px solid #eee;
+    color: var(--ink); font-family: 'DM Mono', monospace; font-size: 0.78rem;
+  }
+  .ht-table tr:nth-child(even) td { background: #f9f7f3; }
+  .ht-instructions {
+    margin-top: 14px;
+    background: #fefaf5;
+    border: 1px solid #e8dfc8;
+    border-left: 4px solid var(--gold);
+    border-radius: 2px;
+    padding: 10px 14px;
+  }
+  .ht-inst-title {
+    font-size: 0.65rem; font-weight: 700;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 5px;
+  }
+  .ht-inst-list {
+    list-style: decimal; padding-left: 14px;
+    color: #5a5040; font-size: 0.73rem; line-height: 1.75;
+  }
+  .ht-sig-row {
+    display: flex; justify-content: space-between;
+    margin-top: 18px; padding-top: 14px;
+    border-top: 1px dashed #ccc;
+  }
+  .ht-sig-block { text-align: center; }
+  .ht-sig-line {
+    width: 140px; border-bottom: 1px solid var(--ink);
+    margin: 0 auto 5px; height: 28px;
+  }
+  .ht-sig-label {
+    font-size: 0.62rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: #999;
+  }
+  .ht-footer {
+    background: var(--blue); color: rgba(255,255,255,0.65);
+    padding: 9px 28px; font-size: 0.65rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ht-footer strong { color: white; }
+
+  /* ===== ADMIN DASHBOARD ===== */
+  #dashboard-view {
+    width: 100%;
+    max-width: 1100px;
+    display: none;
+  }
+  .dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .dash-title {
+    font-family: 'Playfair Display', serif;
+    color: var(--paper);
+    font-size: 1.6rem;
+  }
+  .dash-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .dash-search {
+    padding: 9px 14px;
+    border-radius: 3px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.07);
+    color: var(--paper);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    width: 220px;
+    transition: border-color 0.2s;
+  }
+  .dash-search::placeholder { color: #6a6060; }
+  .dash-search:focus { border-color: rgba(255,255,255,0.4); }
+  .dash-filter {
+    padding: 9px 12px;
+    border-radius: 3px;
+    border: 1.5px solid rgba(255,255,255,0.15);
+    background: rgba(255,255,255,0.07);
+    color: var(--paper);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+    cursor: pointer;
+  }
+  .dash-filter option { background: #1a1a24; }
+  .dash-clear-btn {
+    padding: 9px 16px;
+    border-radius: 3px;
+    border: 1.5px solid rgba(192,57,43,0.5);
+    background: rgba(192,57,43,0.12);
+    color: #e07060;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .dash-clear-btn:hover { background: rgba(192,57,43,0.25); }
+
+  /* STATS ROW */
+  .dash-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 6px;
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .stat-card.blue::before { background: var(--blue); }
+  .stat-card.green::before { background: var(--green); }
+  .stat-card.gold::before { background: var(--gold); }
+  .stat-card.purple::before { background: var(--purple); }
+  .stat-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #6a6878;
+    margin-bottom: 8px;
+  }
+  .stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem;
+    color: var(--paper);
+    line-height: 1;
+  }
+  .stat-sub {
+    font-size: 0.72rem;
+    color: #5a5870;
+    margin-top: 5px;
+  }
+
+  /* TABLE */
+  .dash-table-wrap {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .dash-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .dash-table thead tr {
+    background: rgba(26,58,92,0.6);
+  }
+  .dash-table th {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.63rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #8a9aaa;
+  }
+  .dash-table td {
+    padding: 11px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: #ccc8be;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    vertical-align: middle;
+  }
+  .dash-table tr:hover td { background: rgba(255,255,255,0.03); }
+  .dash-table tr:last-child td { border-bottom: none; }
+  .dash-name { color: var(--paper) !important; font-weight: 600; font-family: 'DM Sans', sans-serif !important; }
+  .dash-roll { color: #b8d0e8 !important; }
+  .dash-tid { color: #8a8070 !important; font-size: 0.68rem !important; }
+  .dash-dept-tag {
+    display: inline-block;
+    background: rgba(26,58,92,0.5);
+    color: #a0c0d8;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-family: 'DM Sans', sans-serif;
+    white-space: nowrap;
+  }
+  .dash-sem-tag {
+    display: inline-block;
+    background: rgba(184,134,11,0.2);
+    color: #d4a820;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .dash-action-btn {
+    padding: 5px 12px;
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: opacity 0.15s;
+  }
+  .dash-action-btn:hover { opacity: 0.8; }
+  .btn-view-ticket { background: rgba(26,58,92,0.7); color: #a0c8e8; border: 1px solid rgba(26,58,92,0.9); }
+  .btn-del-ticket  { background: rgba(192,57,43,0.15); color: #e07060; border: 1px solid rgba(192,57,43,0.3); margin-left: 5px; }
+
+  .dash-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #4a4858;
+  }
+  .dash-empty-icon { font-size: 3rem; margin-bottom: 12px; }
+  .dash-empty-text { font-size: 0.9rem; }
+  .dash-empty-sub { font-size: 0.78rem; margin-top: 6px; color: #3a3848; }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal-box {
+    background: #f5f0e8;
+    border-radius: 6px;
+    width: 100%; max-width: 820px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+    transform: translateY(20px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal-box { transform: translateY(0); }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--blue);
+    color: white;
+  }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.1rem; }
+  .modal-close {
+    background: none; border: none; color: white;
+    font-size: 1.3rem; cursor: pointer; opacity: 0.7;
+    transition: opacity 0.15s; line-height: 1;
+  }
+  .modal-close:hover { opacity: 1; }
+  .modal-body { padding: 24px; }
+  .modal-info-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px; margin-bottom: 20px;
+  }
+  .modal-info-card {
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+    padding: 10px 14px;
+  }
+  .modal-info-label {
+    font-size: 0.6rem; font-weight: 700;
+    letter-spacing: 0.12em; text-transform: uppercase; color: #999; margin-bottom: 3px;
+  }
+  .modal-info-value {
+    font-size: 0.88rem; font-weight: 600; color: var(--ink);
+    font-family: 'DM Mono', monospace;
+  }
+  .modal-subjects-title {
+    font-size: 0.68rem; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: var(--blue);
+    margin-bottom: 8px;
+  }
+  .modal-photo {
+    width: 70px; height: 86px;
+    border: 2px solid var(--blue);
+    border-radius: 2px;
+    object-fit: cover;
+    float: right;
+    margin-left: 16px;
+    margin-bottom: 8px;
+    background: #eee;
+    font-size: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .modal-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+  @media print {
+    body { background: white !important; padding: 0 !important; background-image: none !important; }
+    .form-panel, .ticket-actions, h1.site-title, .site-subtitle, .tab-nav, #dashboard-view { display: none !important; }
+    #ticket-section { display: block !important; margin: 0 !important; max-width: 100% !important; }
+    #hall-ticket { box-shadow: none !important; border-radius: 0 !important; }
+    .ht-header, .ht-stripe, .ht-badge, .ht-table thead tr, .ht-footer {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact;
+    }
+    @page { margin: 0.5cm; size: A4; }
+  }
+
+  @media (max-width: 600px) {
+    .grid-2 { grid-template-columns: 1fr; }
+    .full { grid-column: 1; }
+    .dash-stats { grid-template-columns: 1fr 1fr; }
+    .modal-info-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<h1 class="site-title">&#128203; Hall Ticket Generation System</h1>
+<p class="site-subtitle">Examination Management &bull; QR-Enabled &bull; Digital &amp; Print</p>
+
+<!-- TAB NAV -->
+<div class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('form')">&#127891; Generate Ticket</button>
+  <button class="tab-btn" id="dash-tab-btn" onclick="switchTab('dashboard')">&#128202; Admin Dashboard <span class="tab-badge" id="dash-count">0</span></button>
+</div>
+
+<!-- ===== FORM VIEW ===== -->
+<div id="form-view" style="width:100%;max-width:720px;">
+  <div class="form-panel">
+    <h2>&#127891; Student &amp; Examination Details</h2>
+    <div class="grid-2">
+      <div class="field full">
+        <label>University / Institution Name <span class="req-star">*</span></label>
+        <input type="text" id="uni" value="NARAYANA ENGINEERING COLLEGE,NELLORE" required placeholder="e.g. Narayana Engineering College">
+      </div>
+      <div class="field full">
+        <label>Examination Name <span class="req-star">*</span></label>
+        <input type="text" id="exam" value="MCA II Semester Regular Examinations Nov/Dec 2026" required placeholder="e.g. B.Tech IV Sem Regular Exams">
+      </div>
+      <div class="field">
+        <label>Student Name <span class="req-star">*</span></label>
+        <input type="text" id="sname" value="" required placeholder="Full name of student">
+      </div>
+      <div class="field">
+        <label>Roll Number <span class="req-star">*</span></label>
+        <input type="text" id="roll" value="" required placeholder="e.g. 22MCA01001">
+      </div>
+      <div class="field">
+        <label>Registration Number <span class="req-star">*</span></label>
+        <input type="text" id="reg" value="" required placeholder="e.g. REG2022001">
+      </div>
+      <div class="field">
+        <label>Date of Birth <span class="req-star">*</span></label>
+        <input type="date" id="dob" required>
+      </div>
+      <div class="field">
+        <label>Department / Branch <span class="req-star">*</span></label>
+        <input type="text" id="dept" value="Computer Science and Engineering" required placeholder="e.g. Computer Science">
+      </div>
+      <div class="field">
+        <label>Semester <span class="req-star">*</span></label>
+        <select id="sem" required>
+          <option value="">-- Select Semester --</option>
+          <option>I Semester</option><option>II Semester</option>
+          <option>III Semester</option><option>IV Semester</option>
+          <option>V Semester</option><option>VI Semester</option>
+          <option>VII Semester</option><option>VIII Semester</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Examination Center / Room <span class="req-star">*</span></label>
+        <input type="text" id="center" value="Block-A, Room 204" required placeholder="e.g. Block-A, Room 101">
+      </div>
+      <div class="field">
+        <label>Reporting Time <span class="req-star">*</span></label>
+        <input type="time" id="reptime" value="09:00" required>
+      </div>
+      <div class="field">
+        <label>Academic Year <span class="req-star">*</span></label>
+        <input type="text" id="acyear" value="2024-25" required placeholder="e.g. 2024-25">
+      </div>
+      <div class="field full">
+        <label>Student Photograph</label>
+        <div class="photo-upload-area" id="photo-upload-area">
+          <input type="file" id="photo-input" accept="image/*" onchange="handlePhotoUpload(event)">
+          <img class="photo-preview-img" id="photo-preview" alt="Preview">
+          <div class="photo-upload-icon" id="photo-icon">📷</div>
+          <div class="photo-upload-text" id="photo-text">Click to upload student photo</div>
+          <div class="photo-upload-hint" id="photo-hint">JPG, PNG, WEBP &bull; Recommended: passport size</div>
+          <button class="photo-remove-btn" id="photo-remove-btn" onclick="removePhoto(event)">✕ Remove Photo</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Subject Schedule <span class="req-star" style="color:var(--accent);font-size:0.85rem">* at least one subject required</span></div>
+    <div style="display:grid;grid-template-columns:2fr 1fr 1fr 50px;gap:8px;margin-bottom:6px;">
+      <label style="margin:0">Subject Code &amp; Name <span class="req-star">*</span></label>
+      <label style="margin:0">Exam Date <span class="req-star">*</span></label>
+      <label style="margin:0">Time <span class="req-star">*</span></label>
+      <span></span>
+    </div>
+    <div id="subjects-container"></div>
+    <button class="add-subject-btn" onclick="addSubject()">+ Add Subject</button>
+    <button class="generate-btn" onclick="generateTicket()">&#10022; Generate Hall Ticket with QR Code</button>
+  </div>
+
+  <!-- TICKET -->
+  <div id="ticket-section">
+    <div class="ticket-actions">
+      <button class="action-btn btn-edit" onclick="editForm()">&larr; Edit Details</button>
+      <button class="action-btn btn-print" onclick="window.print()">&#128424; Print Hall Ticket</button>
+    </div>
+    <div id="hall-ticket">
+      <div class="ht-header">
+        <div class="ht-logo">&#127891;</div>
+        <div class="ht-uni-info">
+          <div class="ht-uni-name" id="ht-uni-name"></div>
+          <div class="ht-exam-name" id="ht-exam-name"></div>
+        </div>
+        <div class="ht-badge">Hall Ticket</div>
+      </div>
+      <div class="ht-stripe"></div>
+      <div class="ht-body">
+        <div class="ht-title">Admit Card / Hall Ticket</div>
+        <div class="ht-main">
+          <div class="ht-details">
+            <div class="ht-info-grid">
+              <div class="ht-info-cell"><div class="ht-info-label">Student Name</div><div class="ht-info-value" id="ht-sname"></div></div>
+              <div class="ht-info-cell"><div class="ht-info-label">Roll Number</div><div class="ht-info-value" id="ht-roll"></div></div>
+              <div class="ht-info-cell"><div class="ht-info-label">Registration No.</div><div class="ht-info-value" id="ht-reg"></div></div>
+              <div class="ht-info-cell"><div class="ht-info-label">Date of Birth</div><div class="ht-info-value" id="ht-dob"></div></div>
+              <div class="ht-info-cell"><div class="ht-info-label">Department</div><div class="ht-info-value" id="ht-dept"></div></div>
+              <div class="ht-info-cell"><div class="ht-info-label">Semester</div><div class="ht-info-value" id="ht-sem"></div></div>
+              <div class="ht-info-cell"><div class="ht-info-label">Exam Center</div><div class="ht-info-value" id="ht-center"></div></div>
+              <div class="ht-info-cell"><div class="ht-info-label">Reporting Time</div><div class="ht-info-value" id="ht-reptime"></div></div>
+            </div>
+          </div>
+          <div class="ht-right-col">
+            <div>
+              <div class="ht-photo" id="ht-photo-box">&#128100;</div>
+              <div class="ht-photo-label">Candidate<br>Photo</div>
+            </div>
+            <div class="ht-qr-wrap">
+              <div id="qrcode-display"></div>
+              <div class="ht-qr-label">Scan to Verify</div>
+              <div class="ht-qr-id" id="ht-qr-id"></div>
+            </div>
+          </div>
+        </div>
+        <div class="ht-subjects">
+          <div class="ht-subjects-title">Subject-wise Examination Schedule</div>
+          <table class="ht-table">
+            <thead><tr><th>#</th><th>Code</th><th>Subject Name</th><th>Exam Date</th><th>Time</th></tr></thead>
+            <tbody id="ht-subjects-body"></tbody>
+          </table>
+        </div>
+        <div class="ht-instructions">
+          <div class="ht-inst-title">&#9888; Important Instructions</div>
+          <ul class="ht-inst-list">
+            <li>Candidates must report 30 minutes before the examination starts.</li>
+            <li>Carry this hall ticket with a valid government-issued photo ID.</li>
+            <li>Mobile phones and electronic devices are strictly prohibited in the hall.</li>
+            <li>Any malpractice will lead to immediate cancellation of the examination.</li>
+            <li>This hall ticket is valid only upon verification by the examination authority.</li>
+            <li>The QR code on this ticket is unique and must not be tampered with.</li>
+          </ul>
+        </div>
+        <div class="ht-sig-row">
+          <div class="ht-sig-block"><div class="ht-sig-line"></div><div class="ht-sig-label">Candidate Signature</div></div>
+          <div class="ht-sig-block"><div class="ht-sig-line"></div><div class="ht-sig-label">Parent / Guardian</div></div>
+          <div class="ht-sig-block"><div class="ht-sig-line"></div><div class="ht-sig-label">Controller of Examinations</div></div>
+        </div>
+      </div>
+      <div class="ht-footer">
+        <span>Academic Year: <strong id="ht-acyear"></strong></span>
+        <span>Generated: <strong id="ht-gentime"></strong></span>
+        <span>Ticket ID: <strong id="ht-tid"></strong></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD VIEW ===== -->
+<div id="dashboard-view">
+  <div class="dash-header">
+    <div class="dash-title">&#128202; Admin Dashboard</div>
+    <div class="dash-controls">
+      <input type="text" class="dash-search" id="dash-search" placeholder="&#128269; Search name / roll / dept…" oninput="renderDashboard()">
+      <select class="dash-filter" id="dash-sem-filter" onchange="renderDashboard()">
+        <option value="">All Semesters</option>
+        <option>I Semester</option><option>II Semester</option>
+        <option>III Semester</option><option>IV Semester</option>
+        <option>V Semester</option><option>VI Semester</option>
+        <option>VII Semester</option><option>VIII Semester</option>
+      </select>
+      <button class="dash-clear-btn" onclick="clearAllRecords()">🗑 Clear All</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="dash-stats">
+    <div class="stat-card blue">
+      <div class="stat-label">Total Tickets</div>
+      <div class="stat-value" id="stat-total">0</div>
+      <div class="stat-sub">generated so far</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-label">Departments</div>
+      <div class="stat-value" id="stat-depts">0</div>
+      <div class="stat-sub">unique departments</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-label">Last Generated</div>
+      <div class="stat-value" id="stat-last" style="font-size:1rem;margin-top:8px;line-height:1.4;">—</div>
+      <div class="stat-sub">most recent ticket</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-label">Semesters</div>
+      <div class="stat-value" id="stat-sems">0</div>
+      <div class="stat-sub">unique semesters</div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="dash-table-wrap">
+    <table class="dash-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Student Name</th>
+          <th>Roll No.</th>
+          <th>Department</th>
+          <th>Semester</th>
+          <th>Subjects</th>
+          <th>Generated On</th>
+          <th>Ticket ID</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="dash-tbody"></tbody>
+    </table>
+    <div class="dash-empty" id="dash-empty" style="display:none;">
+      <div class="dash-empty-icon">📋</div>
+      <div class="dash-empty-text">No hall tickets generated yet</div>
+      <div class="dash-empty-sub">Generate a ticket from the form — it will appear here automatically</div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">&#128203; Hall Ticket Details</div>
+      <button class="modal-close" onclick="closeModal()">&#10005;</button>
+    </div>
+    <div class="modal-body" id="modal-body-content"></div>
+  </div>
+</div>
+
+<div id="saved-banner" style="position:fixed;top:20px;right:20px;background:#1a7c4f;color:white;padding:12px 20px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:9999;opacity:0;transform:translateY(-20px);transition:opacity 0.3s,transform 0.3s;pointer-events:none;">
+  ✓ Hall Ticket saved to Admin Dashboard
+</div>
+
+<script>
+/* ============================================================
+   SELF-CONTAINED QR CODE GENERATOR
+   ============================================================ */
+var QRGen = (function() {
+  var GF_EXP = new Array(512), GF_LOG = new Array(256);
+  (function() {
+    var x = 1;
+    for (var i = 0; i < 255; i++) {
+      GF_EXP[i] = x; GF_LOG[x] = i;
+      x <<= 1; if (x & 256) x ^= 285;
+    }
+    for (var i = 255; i < 512; i++) GF_EXP[i] = GF_EXP[i - 255];
+  })();
+  function gfMul(a, b) { return (a && b) ? GF_EXP[GF_LOG[a] + GF_LOG[b]] : 0; }
+  function gfPolyMul(p, q) {
+    var r = new Array(p.length + q.length - 1).fill(0);
+    for (var i = 0; i < p.length; i++)
+      for (var j = 0; j < q.length; j++) r[i+j] ^= gfMul(p[i], q[j]);
+    return r;
+  }
+  function genPoly(n) {
+    var g = [1];
+    for (var i = 0; i < n; i++) g = gfPolyMul(g, [1, GF_EXP[i]]);
+    return g;
+  }
+  function gfPolyDiv(msg, gen) {
+    var r = msg.slice();
+    for (var i = 0; i < msg.length - gen.length + 1; i++) {
+      var c = r[i]; if (!c) continue;
+      for (var j = 1; j < gen.length; j++) r[i+j] ^= gfMul(gen[j], c);
+    }
+    return r.slice(msg.length - gen.length + 1);
+  }
+  var VT = {
+    1:[26,16,10,1,16,0,0], 2:[44,28,16,1,28,0,0], 3:[70,44,26,1,44,0,0],
+    4:[100,64,18,2,32,0,0], 5:[134,86,24,2,43,0,0], 6:[172,108,16,2,27,2,27],
+    7:[196,124,18,4,31,0,0], 8:[242,154,22,2,38,2,39],
+    9:[292,182,22,3,36,2,37], 10:[346,216,26,4,43,1,43]
+  };
+  function getVersion(bytes) {
+    for (var v = 1; v <= 10; v++) if (VT[v][1] >= bytes) return v;
+    return 10;
+  }
+  function BitBuf() { this.data = []; this.bitLen = 0; }
+  BitBuf.prototype.put = function(val, bits) {
+    for (var i = bits - 1; i >= 0; i--) {
+      if (this.bitLen % 8 === 0) this.data.push(0);
+      if ((val >> i) & 1) this.data[this.data.length-1] |= 1 << (7 - this.bitLen % 8);
+      this.bitLen++;
+    }
+  };
+  var ALIGN_POS = [[],[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50]];
+  function applyMask(p, r, c) {
+    switch(p) {
+      case 0: return (r+c)%2===0; case 1: return r%2===0;
+      case 2: return c%3===0; case 3: return (r+c)%3===0;
+      case 4: return (Math.floor(r/2)+Math.floor(c/3))%2===0;
+      case 5: return (r*c)%2+(r*c)%3===0;
+      case 6: return ((r*c)%2+(r*c)%3)%2===0;
+      case 7: return ((r+c)%2+(r*c)%3)%2===0;
+    }
+  }
+  function calcPenalty(mat, n) {
+    var score = 0;
+    for (var i = 0; i < n; i++) {
+      var rc = 1, cc = 1;
+      for (var j = 1; j < n; j++) {
+        if (mat[i][j] === mat[i][j-1]) { rc++; } else { if(rc>=5) score+=rc-2; rc=1; }
+        if (mat[j][i] === mat[j-1][i]) { cc++; } else { if(cc>=5) score+=cc-2; cc=1; }
+      }
+      if (rc>=5) score+=rc-2; if (cc>=5) score+=cc-2;
+    }
+    for (var i = 0; i < n-1; i++)
+      for (var j = 0; j < n-1; j++)
+        if (mat[i][j]===mat[i+1][j] && mat[i][j]===mat[i][j+1] && mat[i][j]===mat[i+1][j+1]) score+=3;
+    return score;
+  }
+  function makeMatrix(n) {
+    var m = [];
+    for (var i = 0; i < n; i++) { m.push([]); for (var j = 0; j < n; j++) m[i].push(0); }
+    return m;
+  }
+  function encode(text) {
+    var bytes = [];
+    for (var i = 0; i < text.length; i++) {
+      var c = text.charCodeAt(i);
+      if (c < 128) bytes.push(c);
+      else if (c < 2048) { bytes.push((c>>6)|192); bytes.push((c&63)|128); }
+      else { bytes.push((c>>12)|224); bytes.push(((c>>6)&63)|128); bytes.push((c&63)|128); }
+    }
+    var ver = getVersion(bytes.length);
+    var vt = VT[ver], dataCW = vt[1];
+    var bb = new BitBuf();
+    bb.put(4, 4);
+    bb.put(bytes.length, 8);
+    for (var i = 0; i < bytes.length; i++) bb.put(bytes[i], 8);
+    bb.put(0, 4);
+    while (bb.bitLen % 8 !== 0) bb.put(0, 1);
+    var pad = [236, 17], pi = 0;
+    while (bb.data.length < dataCW) { bb.put(pad[pi], 8); pi = (pi+1)%2; }
+    var ecN = vt[2], b1n = vt[3], b1d = vt[4], b2n = vt[5], b2d = vt[6];
+    var gen = genPoly(ecN);
+    var allData = [], allEC = [], offset = 0;
+    function doBlock(dLen) {
+      var blk = bb.data.slice(offset, offset+dLen); offset += dLen;
+      var padded = blk.concat(new Array(ecN).fill(0));
+      var ec = gfPolyDiv(padded, gen);
+      allData.push(blk); allEC.push(ec);
+    }
+    for (var i = 0; i < b1n; i++) doBlock(b1d);
+    for (var i = 0; i < b2n; i++) doBlock(b2d);
+    var final = [], maxD = Math.max(b1d, b2d);
+    for (var i = 0; i < maxD; i++) for (var j = 0; j < allData.length; j++) if (i < allData[j].length) final.push(allData[j][i]);
+    for (var i = 0; i < ecN; i++) for (var j = 0; j < allEC.length; j++) final.push(allEC[j][i]);
+    var n = ver*4+17;
+    var mat = makeMatrix(n), func = makeMatrix(n);
+    function setF(r, c, v) { if(r>=0&&r<n&&c>=0&&c<n){mat[r][c]=v?1:0;func[r][c]=1;} }
+    function finder(tr, tc) {
+      for (var r = 0; r < 7; r++) for (var c = 0; c < 7; c++)
+        setF(tr+r, tc+c, (r===0||r===6||c===0||c===6||(r>=2&&r<=4&&c>=2&&c<=4))?1:0);
+      for (var i = -1; i <= 7; i++) {
+        setF(tr-1, tc+i, 0); setF(tr+7, tc+i, 0);
+        setF(tr+i, tc-1, 0); setF(tr+i, tc+7, 0);
+      }
+    }
+    finder(0,0); finder(0,n-7); finder(n-7,0);
+    for (var i = 8; i < n-8; i++) { setF(6,i,i%2===0?1:0); setF(i,6,i%2===0?1:0); }
+    setF(4*ver+9, 8, 1);
+    var ap = ALIGN_POS[ver];
+    for (var i = 0; i < ap.length; i++) for (var j = 0; j < ap.length; j++) {
+      var ar = ap[i], ac = ap[j];
+      if (func[ar][ac]) continue;
+      for (var dr = -2; dr <= 2; dr++) for (var dc = -2; dc <= 2; dc++)
+        setF(ar+dr, ac+dc, (dr===0&&dc===0)||Math.abs(dr)===2||Math.abs(dc)===2?1:0);
+    }
+    for (var i = 0; i < 6; i++) { func[8][i]=1; func[i][8]=1; }
+    func[8][7]=1; func[7][8]=1; func[8][8]=1;
+    for (var i = 8; i < 15; i++) { func[n-15+i][8]=1; func[8][n-15+i]=1; }
+    func[8][n-8]=1;
+    var bits = [];
+    for (var i = 0; i < final.length; i++) for (var b = 7; b >= 0; b--) bits.push((final[i]>>b)&1);
+    var remBits = [0,7,7,7,7,7,0,0,0,0,0];
+    for (var i = 0; i < remBits[ver]; i++) bits.push(0);
+    var bitIdx = 0, dir = -1;
+    for (var c = n-1; c >= 0; c -= 2) {
+      if (c === 6) c = 5;
+      for (var cnt = 0; cnt < n; cnt++) {
+        var r = (dir === -1) ? (n-1-cnt) : cnt;
+        for (var dc = 0; dc < 2; dc++) {
+          var cc = c - dc;
+          if (!func[r][cc]) { mat[r][cc] = bitIdx < bits.length ? bits[bitIdx++] : 0; }
+        }
+      }
+      dir = -dir;
+    }
+    var FMT = [21522,20773,24188,23371,17913,16590,20375,19104];
+    var bestScore = Infinity, bestMat = null;
+    for (var mp = 0; mp < 8; mp++) {
+      var m2 = makeMatrix(n);
+      for (var r = 0; r < n; r++) for (var c = 0; c < n; c++)
+        m2[r][c] = func[r][c] ? mat[r][c] : (mat[r][c] ^ (applyMask(mp,r,c)?1:0));
+      var fw = FMT[mp];
+      var fb = [];
+      for (var i = 14; i >= 0; i--) fb.push((fw>>i)&1);
+      for (var i = 0; i < 6; i++) m2[8][i] = fb[i];
+      m2[8][7] = fb[6]; m2[8][8] = fb[7]; m2[7][8] = fb[8];
+      for (var i = 0; i < 6; i++) m2[5-i][8] = fb[9+i];
+      for (var i = 0; i < 7; i++) m2[n-7+i][8] = fb[i];
+      for (var i = 0; i < 8; i++) m2[8][n-8+i] = fb[7+i];
+      var score = calcPenalty(m2, n);
+      if (score < bestScore) { bestScore = score; bestMat = m2; }
+    }
+    return { mat: bestMat, n: n };
+  }
+  function draw(canvas, text, size, darkColor) {
+    var res = encode(text);
+    var mat = res.mat, n = res.n;
+    var mod = Math.max(1, Math.floor(size / n));
+    var px = mod * n;
+    canvas.width = px; canvas.height = px;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,px,px);
+    ctx.fillStyle = darkColor || '#000000';
+    for (var r = 0; r < n; r++)
+      for (var c = 0; c < n; c++)
+        if (mat[r][c]) ctx.fillRect(c*mod, r*mod, mod, mod);
+  }
+  return { draw: draw };
+})();
+
+/* ============================================================
+   IN-MEMORY STORE (replaces window.storage for compatibility)
+   ============================================================ */
+var MemStore = (function() {
+  var _data = {};
+  return {
+    get: function(key) { return _data[key] !== undefined ? _data[key] : null; },
+    set: function(key, val) { _data[key] = val; },
+    del: function(key) { delete _data[key]; },
+    keys: function() { return Object.keys(_data); }
+  };
+})();
+
+/* ============================================================
+   APP LOGIC
+   ============================================================ */
+var uploadedPhotoDataURL = null;
+var currentTab = 'form';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('form-view').style.display = tab === 'form' ? 'block' : 'none';
+  document.getElementById('dashboard-view').style.display = tab === 'dashboard' ? 'block' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(function(b, i) {
+    b.classList.toggle('active', (i === 0 && tab === 'form') || (i === 1 && tab === 'dashboard'));
+  });
+  if (tab === 'dashboard') renderDashboard();
+}
+
+function handlePhotoUpload(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    uploadedPhotoDataURL = e.target.result;
+    var preview = document.getElementById('photo-preview');
+    preview.src = uploadedPhotoDataURL;
+    preview.style.display = 'block';
+    document.getElementById('photo-icon').style.display = 'none';
+    document.getElementById('photo-text').style.display = 'none';
+    document.getElementById('photo-hint').style.display = 'none';
+    document.getElementById('photo-remove-btn').style.display = 'inline-block';
+    document.getElementById('photo-upload-area').classList.add('has-photo');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  uploadedPhotoDataURL = null;
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo-preview').src = '';
+  document.getElementById('photo-icon').style.display = '';
+  document.getElementById('photo-text').style.display = '';
+  document.getElementById('photo-hint').style.display = '';
+  document.getElementById('photo-remove-btn').style.display = 'none';
+  document.getElementById('photo-input').value = '';
+  document.getElementById('photo-upload-area').classList.remove('has-photo');
+}
+
+var defaultSubjects = [
+  {sub:'CS401 - Design and Analysis of Algorithms', date:'2024-11-04', time:'10:00 AM'},
+  {sub:'CS402 - Database Management Systems',       date:'2024-11-06', time:'10:00 AM'},
+  {sub:'CS403 - Operating Systems',                 date:'2024-11-08', time:'10:00 AM'},
+  {sub:'CS404 - Computer Networks',                 date:'2024-11-11', time:'10:00 AM'},
+];
+defaultSubjects.forEach(function(s) { addSubject(s); });
+
+function addSubject(data) {
+  data = data || {};
+  var row = document.createElement('div');
+  row.className = 'subject-row';
+  row.innerHTML =
+    '<input type="text" placeholder="Code - Subject Name" value="'+(data.sub||'')+'" required>' +
+    '<input type="date" value="'+(data.date||'')+'" required>' +
+    '<input type="text" placeholder="10:00 AM" value="'+(data.time||'')+'" required>' +
+    '<button class="remove-btn" onclick="this.parentElement.remove()">&#10005;</button>';
+  document.getElementById('subjects-container').appendChild(row);
+}
+
+function fmtDate(d) {
+  if (!d) return '---';
+  var p = d.split('-');
+  if (p.length < 3) return d;
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return parseInt(p[2]) + ' ' + months[parseInt(p[1])-1] + ' ' + p[0];
+}
+function fmtTime(t) {
+  if (!t) return '---';
+  var p = t.split(':'); var h = parseInt(p[0]), m = parseInt(p[1]||0);
+  return (h > 12 ? h-12 : (h||12)) + ':' + (m < 10 ? '0'+m : m) + ' ' + (h >= 12 ? 'PM' : 'AM');
+}
+
+function validateForm() {
+  var required = ['uni','exam','sname','roll','reg','dob','dept','sem','center','reptime','acyear'];
+  var allOk = true;
+  for (var i = 0; i < required.length; i++) {
+    var el = document.getElementById(required[i]);
+    if (!el.value.trim()) {
+      el.classList.add('touched');
+      if (allOk) { el.focus(); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+      allOk = false;
+    } else {
+      el.classList.remove('touched');
+    }
+  }
+  // Check subjects
+  var rows = document.querySelectorAll('#subjects-container .subject-row');
+  if (rows.length === 0) {
+    alert('Please add at least one subject.');
+    return false;
+  }
+  var subOk = true;
+  rows.forEach(function(r) {
+    var inp = r.querySelectorAll('input');
+    if (!inp[0].value.trim() || !inp[1].value.trim() || !inp[2].value.trim()) {
+      subOk = false;
+      inp[0].classList.add('touched');
+    }
+  });
+  if (!subOk) { alert('Please fill all subject fields (name, date, time).'); return false; }
+  return allOk;
+}
+
+function generateTicket() {
+  if (!validateForm()) return;
+
+  var uni    = document.getElementById('uni').value.trim();
+  var exam   = document.getElementById('exam').value.trim();
+  var sname  = document.getElementById('sname').value.trim();
+  var roll   = document.getElementById('roll').value.trim();
+  var reg    = document.getElementById('reg').value.trim();
+  var dob    = document.getElementById('dob').value;
+  var dept   = document.getElementById('dept').value.trim();
+  var sem    = document.getElementById('sem').value;
+  var center = document.getElementById('center').value.trim();
+  var reptime= document.getElementById('reptime').value;
+  var acyear = document.getElementById('acyear').value.trim();
+
+  var rows = document.querySelectorAll('#subjects-container .subject-row');
+  var subjects = [];
+  rows.forEach(function(r) {
+    var inp = r.querySelectorAll('input');
+    if (inp[0].value.trim()) subjects.push({sub: inp[0].value.trim(), date: inp[1].value, time: inp[2].value});
+  });
+
+  var tid = 'HT-' + roll.replace(/[^A-Z0-9]/gi,'').toUpperCase() + '-' + Date.now().toString(36).toUpperCase();
+  var gentime = new Date().toLocaleString('en-IN', {dateStyle:'medium', timeStyle:'short'});
+
+  // Fill ticket display
+  document.getElementById('ht-uni-name').textContent  = uni;
+  document.getElementById('ht-exam-name').textContent = exam;
+  document.getElementById('ht-sname').textContent     = sname;
+  document.getElementById('ht-roll').textContent      = roll;
+  document.getElementById('ht-reg').textContent       = reg;
+  document.getElementById('ht-dob').textContent       = fmtDate(dob);
+  document.getElementById('ht-dept').textContent      = dept;
+  document.getElementById('ht-sem').textContent       = sem;
+  document.getElementById('ht-center').textContent    = center;
+  document.getElementById('ht-reptime').textContent   = fmtTime(reptime);
+  document.getElementById('ht-acyear').textContent    = acyear;
+  document.getElementById('ht-gentime').textContent   = gentime;
+  document.getElementById('ht-tid').textContent       = tid;
+  document.getElementById('ht-qr-id').textContent     = 'Roll: ' + roll;
+
+  var tbody = document.getElementById('ht-subjects-body');
+  tbody.innerHTML = '';
+  subjects.forEach(function(s, i) {
+    var parts = s.sub.split(/[-–]/);
+    var code = parts[0] ? parts[0].trim() : '---';
+    var name = parts.length > 1 ? parts.slice(1).join('-').trim() : s.sub;
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td>'+(i+1)+'</td><td>'+code+'</td><td>'+name+'</td><td>'+fmtDate(s.date)+'</td><td>'+(s.time||'---')+'</td>';
+    tbody.appendChild(tr);
+  });
+
+  // QR
+  var qrLines = [
+    'HALL TICKET',
+    'Univ:'+uni.substring(0,30),
+    'Name:'+sname,
+    'Roll:'+roll,
+    'Reg:'+reg,
+    'DOB:'+fmtDate(dob),
+    'Dept:'+dept.substring(0,20),
+    'Sem:'+sem,
+    'Center:'+center,
+    'ID:'+tid
+  ];
+  var container = document.getElementById('qrcode-display');
+  container.innerHTML = '';
+  var canvas = document.createElement('canvas');
+  container.appendChild(canvas);
+  try {
+    QRGen.draw(canvas, qrLines.join('|'), 110, '#1a3a5c');
+  } catch(e) {
+    container.innerHTML = '<div style="padding:10px;text-align:center;font-size:0.6rem;color:#999;">QR ERROR<br>'+roll+'</div>';
+  }
+
+  var photoBox = document.getElementById('ht-photo-box');
+  if (uploadedPhotoDataURL) {
+    photoBox.innerHTML = '<img src="' + uploadedPhotoDataURL + '" alt="Student Photo">';
+  } else {
+    photoBox.innerHTML = '&#128100;';
+  }
+
+  // Save to store
+  var record = {
+    tid: tid, sname: sname, roll: roll, reg: reg,
+    dept: dept, sem: sem, uni: uni, exam: exam,
+    center: center, dob: fmtDate(dob), acyear: acyear,
+    reptime: fmtTime(reptime), subjects: subjects,
+    gentime: gentime, photo: uploadedPhotoDataURL || null
+  };
+  var idxRaw = MemStore.get('halltickets-index');
+  var ids = idxRaw ? JSON.parse(idxRaw) : [];
+  if (ids.indexOf(tid) === -1) ids.push(tid);
+  MemStore.set('halltickets-index', JSON.stringify(ids));
+  MemStore.set('hallticket:' + tid, JSON.stringify(record));
+
+  // Update badge
+  updateDashBadge(ids.length);
+  showSavedBanner();
+
+  var sec = document.getElementById('ticket-section');
+  sec.style.display = 'block';
+  setTimeout(function() { sec.scrollIntoView({behavior:'smooth'}); }, 80);
+}
+
+function updateDashBadge(count) {
+  document.getElementById('dash-count').textContent = count || 0;
+}
+
+function showSavedBanner() {
+  var b = document.getElementById('saved-banner');
+  if (!b) return;
+  b.style.opacity = '1'; b.style.transform = 'translateY(0)';
+  setTimeout(function() { b.style.opacity = '0'; b.style.transform = 'translateY(-20px)'; }, 3000);
+}
+
+function editForm() {
+  document.getElementById('ticket-section').style.display = 'none';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+/* ===== DASHBOARD ===== */
+function getAllRecords() {
+  var idxRaw = MemStore.get('halltickets-index');
+  if (!idxRaw) return [];
+  var ids = JSON.parse(idxRaw);
+  var records = [];
+  ids.forEach(function(tid) {
+    var raw = MemStore.get('hallticket:' + tid);
+    if (raw) records.push(JSON.parse(raw));
+  });
+  return records;
+}
+
+function renderDashboard() {
+  var records = getAllRecords();
+  var search = (document.getElementById('dash-search').value || '').toLowerCase();
+  var semFilter = document.getElementById('dash-sem-filter').value;
+
+  var filtered = records.filter(function(r) {
+    var matchSearch = !search ||
+      (r.sname && r.sname.toLowerCase().includes(search)) ||
+      (r.roll  && r.roll.toLowerCase().includes(search)) ||
+      (r.dept  && r.dept.toLowerCase().includes(search)) ||
+      (r.reg   && r.reg.toLowerCase().includes(search));
+    var matchSem = !semFilter || r.sem === semFilter;
+    return matchSearch && matchSem;
+  });
+
+  // Stats
+  var depts = new Set(records.map(function(r) { return r.dept; }));
+  var sems  = new Set(records.map(function(r) { return r.sem; }));
+  document.getElementById('stat-total').textContent = records.length;
+  document.getElementById('stat-depts').textContent = depts.size;
+  document.getElementById('stat-sems').textContent  = sems.size;
+  document.getElementById('stat-last').textContent  = records.length ? records[records.length-1].sname || '—' : '—';
+  updateDashBadge(records.length);
+
+  var tbody = document.getElementById('dash-tbody');
+  tbody.innerHTML = '';
+
+  if (filtered.length === 0) {
+    document.getElementById('dash-empty').style.display = 'block';
+    document.getElementById('dash-empty').querySelector('.dash-empty-text').textContent =
+      records.length === 0 ? 'No hall tickets generated yet' : 'No records match your filter';
+    return;
+  }
+  document.getElementById('dash-empty').style.display = 'none';
+
+  filtered.forEach(function(r, i) {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td style="color:#6a6878;">' + (i+1) + '</td>' +
+      '<td class="dash-name">' + escHtml(r.sname) + '</td>' +
+      '<td class="dash-roll">' + escHtml(r.roll) + '</td>' +
+      '<td><span class="dash-dept-tag">' + escHtml(r.dept) + '</span></td>' +
+      '<td><span class="dash-sem-tag">' + escHtml(r.sem) + '</span></td>' +
+      '<td style="color:#8a8070;">' + (r.subjects ? r.subjects.length : 0) + '</td>' +
+      '<td style="color:#6a6878;font-size:0.72rem;">' + escHtml(r.gentime) + '</td>' +
+      '<td class="dash-tid">' + escHtml(r.tid) + '</td>' +
+      '<td>' +
+        '<button class="dash-action-btn btn-view-ticket" onclick="viewRecord(\'' + r.tid + '\')">&#128065; View</button>' +
+        '<button class="dash-action-btn btn-del-ticket"  onclick="deleteRecord(\'' + r.tid + '\')">&#128465;</button>' +
+      '</td>';
+    tbody.appendChild(tr);
+  });
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function viewRecord(tid) {
+  var raw = MemStore.get('hallticket:' + tid);
+  if (!raw) return;
+  var r = JSON.parse(raw);
+  var photoHtml = r.photo
+    ? '<div class="modal-photo" style="float:right;margin-left:16px;margin-bottom:8px;width:70px;height:86px;border:2px solid #1a3a5c;border-radius:2px;overflow:hidden;"><img src="'+r.photo+'" style="width:100%;height:100%;object-fit:cover;"></div>'
+    : '<div class="modal-photo" style="float:right;margin-left:16px;margin-bottom:8px;width:70px;height:86px;border:2px solid #1a3a5c;border-radius:2px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:2rem;">👤</div>';
+
+  var subRows = '';
+  if (r.subjects && r.subjects.length) {
+    r.subjects.forEach(function(s, i) {
+      var parts = s.sub.split(/[-–]/);
+      var code = parts[0] ? parts[0].trim() : '---';
+      var name = parts.length > 1 ? parts.slice(1).join('-').trim() : s.sub;
+      subRows += '<tr><td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:0.75rem;">'+(i+1)+'</td>' +
+        '<td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:0.75rem;font-family:monospace;">'+escHtml(code)+'</td>' +
+        '<td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:0.75rem;">'+escHtml(name)+'</td>' +
+        '<td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:0.75rem;font-family:monospace;">'+fmtDate(s.date)+'</td>' +
+        '<td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:0.75rem;">'+escHtml(s.time||'---')+'</td></tr>';
+    });
+  }
+
+  document.getElementById('modal-body-content').innerHTML =
+    photoHtml +
+    '<div class="modal-info-grid">' +
+      mcard('Student Name', r.sname) +
+      mcard('Roll Number', r.roll) +
+      mcard('Registration No.', r.reg) +
+      mcard('Date of Birth', r.dob) +
+      mcard('Department', r.dept) +
+      mcard('Semester', r.sem) +
+      mcard('Exam Center', r.center) +
+      mcard('Reporting Time', r.reptime) +
+      mcard('Academic Year', r.acyear) +
+      mcard('University', r.uni) +
+      mcard('Examination', r.exam) +
+      mcard('Ticket ID', r.tid) +
+    '</div>' +
+    '<div style="clear:both;"></div>' +
+    '<div class="modal-subjects-title">Subject Schedule</div>' +
+    '<table style="width:100%;border-collapse:collapse;font-size:0.82rem;">' +
+      '<thead><tr style="background:#1a3a5c;color:white;">' +
+        '<th style="padding:7px 10px;text-align:left;font-size:0.65rem;">#</th>' +
+        '<th style="padding:7px 10px;text-align:left;font-size:0.65rem;">Code</th>' +
+        '<th style="padding:7px 10px;text-align:left;font-size:0.65rem;">Subject</th>' +
+        '<th style="padding:7px 10px;text-align:left;font-size:0.65rem;">Date</th>' +
+        '<th style="padding:7px 10px;text-align:left;font-size:0.65rem;">Time</th>' +
+      '</tr></thead><tbody>' + subRows + '</tbody></table>' +
+    '<div style="margin-top:12px;font-size:0.68rem;color:#999;font-family:monospace;">Generated: '+escHtml(r.gentime)+'</div>';
+
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+function mcard(label, val) {
+  return '<div class="modal-info-card"><div class="modal-info-label">'+label+'</div><div class="modal-info-value">'+escHtml(val||'—')+'</div></div>';
+}
+
+function closeModal() {
+  document.getElementById('detail-modal').classList.remove('open');
+}
+
+function deleteRecord(tid) {
+  if (!confirm('Delete this hall ticket record?')) return;
+  var idxRaw = MemStore.get('halltickets-index');
+  var ids = idxRaw ? JSON.parse(idxRaw) : [];
+  ids = ids.filter(function(id) { return id !== tid; });
+  MemStore.set('halltickets-index', JSON.stringify(ids));
+  MemStore.del('hallticket:' + tid);
+  renderDashboard();
+}
+
+function clearAllRecords() {
+  if (!confirm('Clear ALL hall ticket records? This cannot be undone.')) return;
+  var idxRaw = MemStore.get('halltickets-index');
+  var ids = idxRaw ? JSON.parse(idxRaw) : [];
+  ids.forEach(function(tid) { MemStore.del('hallticket:' + tid); });
+  MemStore.set('halltickets-index', JSON.stringify([]));
+  renderDashboard();
+}
+
+// Close modal on overlay click
+document.getElementById('detail-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Init badge
+updateDashBadge(0);
+</script>
+</body>
+</html>
